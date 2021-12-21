@@ -1,0 +1,16 @@
+[package]
+name = "learn"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[[bin]]
+name = "gen_cert"
+path = "tools/gen_certs.rs"
+
+
+[dependencies]
+tokio = { version = "1", features = ["full"] }
+certify = "0.3"
+anyhow = "1"
