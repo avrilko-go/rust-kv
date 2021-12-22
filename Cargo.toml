@@ -9,12 +9,22 @@ edition = "2021"
 name = "gen_cert"
 path = "tools/gen_certs.rs"
 
+[[bin]]
+name = "gen_config"
+path = "tools/gen_config.rs"
+
 
 [dependencies]
 tokio = { version = "1", features = ["full"] }
 certify = "0.3"
 anyhow = "1"
 prost = "0.8.0"
+serde = { version = "1", features = ["derive"] }
+toml = "0.5"
+thiserror = "1"
+sled = "0.34"
+tokio-rustls = "0.22"
+yamux = "0.9"
 
 [build-dependencies]
 prost-build = "0.8.0"
