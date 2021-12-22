@@ -14,3 +14,7 @@ path = "tools/gen_certs.rs"
 tokio = { version = "1", features = ["full"] }
 certify = "0.3"
 anyhow = "1"
+prost = "0.8.0"
+
+[build-dependencies]
+prost-build = "0.8.0"
