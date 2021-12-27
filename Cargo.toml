@@ -25,6 +25,7 @@ thiserror = "1"
 sled = "0.34"
 tokio-rustls = "0.22"
 yamux = "0.9"
+dashmap = "4"
 
 [build-dependencies]
 prost-build = "0.8.0"
