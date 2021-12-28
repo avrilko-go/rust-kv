@@ -346,6 +346,7 @@ dependencies = [
  "prost-build",
  "serde",
  "sled",
+ "tempfile",
  "thiserror",
  "tokio",
  "tokio-rustls",

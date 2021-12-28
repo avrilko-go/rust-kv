@@ -1,4 +1,5 @@
 pub mod memory;
+pub mod sleddb;
 
 use crate::{KvError, Kvpair, Value};
 
@@ -42,6 +43,8 @@ where
 mod tests {
     use super::*;
     use crate::memory::MemTable;
+    use crate::sleddb::Sleddb;
+    use tempfile::tempdir;
 
     #[test]
     fn mem_table_base_interface_should_work() {
@@ -58,6 +61,27 @@ mod tests {
     #[test]
     fn mem_table_get_get_iter_should_work() {
         let store = MemTable::new();
+        test_get_iter(store);
+    }
+
+    #[test]
+    fn sleddb_table_base_interface_should_work() {
+        let dir = tempdir().unwrap();
+        let store = Sleddb::new(dir);
+        test_base_interface(store);
+    }
+
+    #[test]
+    fn sleddb_table_get_all_should_work() {
+        let dir = tempdir().unwrap();
+        let store = Sleddb::new(dir);
+        test_get_all(store);
+    }
+
+    #[test]
+    fn sleddb_table_get_get_iter_should_work() {
+        let dir = tempdir().unwrap();
+        let store = Sleddb::new(dir);
         test_get_iter(store);
     }
 

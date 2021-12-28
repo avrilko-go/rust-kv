@@ -1,6 +1,6 @@
-use crate::{CommandRequest, Kvpair, Value};
-
+use crate::{CommandRequest, KvError, Kvpair, Value};
 pub mod abi;
+use prost::Message;
 
 impl CommandRequest {}
 
@@ -24,5 +24,24 @@ impl From<&str> for Value {
         Value {
             value: Some(crate::value::Value::String(s.into())),
         }
+    }
+}
+
+impl TryFrom<Value> for Vec<u8> {
+    type Error = KvError;
+
+    fn try_from(v: Value) -> Result<Self, Self::Error> {
+        let mut buf = Vec::with_capacity(v.encoded_len());
+        v.encode(&mut buf)?;
+        Ok(buf)
+    }
+}
+
+impl TryFrom<&[u8]> for Value {
+    type Error = KvError;
+
+    fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
+        let msg = Value::decode(value)?;
+        Ok(msg)
     }
 }
