@@ -26,6 +26,7 @@ sled = "0.34"
 tokio-rustls = "0.22"
 yamux = "0.9"
 dashmap = "4"
+http = "0.2.5"
 
 [dev-dependencies]
 tempfile = "3"
