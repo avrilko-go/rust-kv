@@ -113,8 +113,8 @@ mod tests {
     use super::*;
     use crate::memory::MemTable;
 
-    #[test]
-    fn hget_should_work() {
-        let store = MemTable::new();
-    }
+    // #[test]
+    // fn hget_should_work() {
+    //     let store = MemTable::new();
+    // }
 }

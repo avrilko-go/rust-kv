@@ -1,8 +1,67 @@
-use crate::{CommandRequest, CommandResponse, KvError, Kvpair, Value};
+use crate::{CommandRequest, CommandResponse, Hdel, Hget, Hgetall, Hmdel, Hmget, Hmset, Hset, KvError, Kvpair, Value};
 pub mod abi;
 use crate::value::Value::Bool;
 use http::StatusCode;
 use prost::Message;
+use crate::command_request::RequestData;
+
+impl CommandRequest {
+    pub fn new_hget(table:impl Into<String>, key:impl Into<String>) -> Self {
+        Self {
+            request_data: Some(RequestData::Hget(Hget { table:table.into(), key:key.into() }))
+        }
+    }
+
+    pub fn new_hgetall(table:impl Into<String>) -> Self {
+        Self {
+            request_data:Some(RequestData::Hgetall(Hgetall {
+                table: table.into()
+            }))
+        }
+    }
+
+    pub fn new_hmget(table:impl Into<String>, keys:Vec<String> ) -> Self {
+        Self {
+            request_data: Some(RequestData::Hmget(Hmget { table: table.into(), keys }))
+        }
+    }
+
+    pub fn new_hset(table:impl Into<String>, key:impl Into<String>, value:Value) -> Self {
+        Self {
+            request_data:Some(RequestData::Hset(Hset { table:table.into(), pair: Some(Kvpair::new(key,value)) }))
+        }
+    }
+
+    pub fn new_hmset(table:impl Into<String>, pairs:Vec<Kvpair>) -> Self {
+        Self {
+            request_data:Some(RequestData::Hmset(Hmset {
+                table:table.into(),
+                pairs
+            }))
+        }
+    }
+
+    pub fn new_hdel(table:impl Into<String>, key:impl Into<String>) -> Self {
+        Self {
+            request_data:Some(RequestData::Hdel(Hdel {
+                table: table.into(),
+                key: key.into()
+            }))
+        }
+    }
+
+    pub fn new_hmdel(table:impl Into<String>,keys:Vec<String>) -> Self {
+        Self {
+            request_data:Some(RequestData::Hmdel(Hmdel {
+                table: table.into(),
+                keys
+            }))
+        }
+    }
+
+
+}
+
 
 impl Kvpair {
     pub fn new(key: impl Into<String>, value: Value) -> Self {
