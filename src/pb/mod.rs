@@ -1,6 +1,6 @@
-use crate::{CommandRequest, CommandResponse, Hdel, Hget, Hgetall, Hmdel, Hmget, Hmset, Hset, KvError, Kvpair, Value};
+use crate::{CommandRequest, CommandResponse, Hdel, Hexist, Hget, Hgetall, Hmdel, Hmexist, Hmget, Hmset, Hset, KvError, Kvpair, Publish, Subscribe, Unsubscribe, Value};
 pub mod abi;
-use crate::value::Value::Bool;
+use crate::value::Value::{Bool, Integer};
 use http::StatusCode;
 use prost::Message;
 use crate::command_request::RequestData;
@@ -59,7 +59,53 @@ impl CommandRequest {
         }
     }
 
+    pub fn new_hexist(table:impl Into<String>, key:impl Into<String>) -> Self {
+        Self {
+            request_data:Some(RequestData::Hexist(Hexist {
+                table: table.into(),
+                key: key.into()
+            }))
+        }
+    }
 
+    pub fn new_hmexist(table:impl Into<String>, keys:Vec<String>) -> Self {
+        Self {
+            request_data:Some(RequestData::Hmexist(Hmexist {
+                table: table.into(),
+                keys
+            }))
+        }
+    }
+
+    pub fn new_subscribe(name:impl Into<String>) -> Self {
+        Self {
+            request_data:Some(RequestData::Subscribe(Subscribe{
+                topic: name.into()
+            }))
+        }
+    }
+
+    pub fn new_unsubscribe(name:impl Into<String>, id:u32) -> Self {
+        Self {
+            request_data:Some(RequestData::Unsubscribe(Unsubscribe {
+                topic: name.into(),
+                id
+            }))
+        }
+    }
+
+    pub fn new_publish(name:impl Into<String>, data:Vec<Value>) -> Self {
+        Self {
+            request_data:Some(RequestData::Publish(Publish {
+                topic:name.into(),
+                data
+            }))
+        }
+    }
+
+    pub fn format(&self) ->String {
+        format!("{:?}", self)
+    }
 }
 
 
@@ -158,6 +204,14 @@ impl From<bool> for Value {
     fn from(v: bool) -> Self {
         Self {
             value: Some(Bool(v)),
+        }
+    }
+}
+
+impl From<i64> for Value {
+    fn from(v: i64) -> Self {
+        Self {
+            value:Some(Integer(v))
         }
     }
 }

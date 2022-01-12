@@ -1,6 +1,6 @@
 use crate::{
     CommandResponse, CommandService, Hdel, Hexist, Hget, Hgetall, Hmdel, Hmexist, Hmget, Hmset,
-    Hset, KvError, Kvpair, Storage, Value,
+    Hset, KvError, Storage, Value,
 };
 
 impl CommandService for Hget {
@@ -110,11 +110,24 @@ impl CommandService for Hmexist {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use crate::{assert_res_error, assert_res_ok, CommandRequest, dispatch};
     use crate::memory::MemTable;
 
-    // #[test]
-    // fn hget_should_work() {
-    //     let store = MemTable::new();
-    // }
+    #[test]
+    fn hget_should_work() {
+        let store = MemTable::new();
+        let cmd = CommandRequest::new_hset("score", "u1", 10.into());
+        dispatch(cmd, &store);
+        let cmd = CommandRequest::new_hget("score", "u1");
+        let res = dispatch(cmd, &store);
+        assert_res_ok(&res, &[10.into()], &[]);
+    }
+
+    #[test]
+    fn hget_with_non_exist_key_should_return_404() {
+        let store = MemTable::new();
+        let cmd = CommandRequest::new_hget("score", "u1");
+        let res = dispatch(cmd, &store);
+        assert_res_error(&res,404, "Not found");
+    }
 }
