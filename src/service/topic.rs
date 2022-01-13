@@ -2,9 +2,8 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicU32, Ordering};
 use dashmap::{DashMap, DashSet};
 use tokio::sync::mpsc::{Receiver, channel, Sender};
-use crate::{CommandResponse, KvError};
-use tracing::{instrument, warn, debug};
-use crate::value::Value;
+use crate::{CommandResponse, KvError, Value};
+use tracing::{instrument, warn, debug, info};
 
 const BROADCAST_CAPACITY: usize = 128;
 
@@ -52,17 +51,52 @@ impl Topic for Arc<Broadcaster> {
         rx
     }
 
+    #[instrument(name = "topic_unsubscribe", skip_all)]
     fn unsubscribe(self, name: String, id: u32) -> Result<u32, KvError> {
-        todo!()
+        match self.remove_subscription(name, id) {
+            Some(id) => Ok(id),
+            None => Err(KvError::NotFound(format!("subscription {}", id))),
+        }
     }
 
+    #[instrument(name = "topic_publish", skip_all)]
     fn publish(self, name: String, value: Arc<CommandResponse>) {
-        todo!()
+        tokio::spawn(async move {
+            let mut ids = vec![];
+            if let Some(topic) = self.topics.get(&name) {
+                let subscriptions = topic.value().clone();
+                drop(topic);
+                for id in subscriptions.into_iter() {
+                    if let Some(tx) = self.subscriptions.get(&id) {
+                        if let Err(e) = tx.send(value.clone()).await {
+                            warn!("Publish to {} failed! error: {:?}", id, e);
+                            ids.push(id);
+                        }
+                    }
+                }
+            }
+
+            for id in ids {
+                self.remove_subscription(name.clone(), id);
+            }
+        });
     }
 }
 
 impl Broadcaster {
-    
+    fn remove_subscription(&self, name: String, id: u32) -> Option<u32> {
+        if let Some(v) = self.topics.get_mut(&name) {
+            v.remove(&id);
+            if v.is_empty() {
+                info!("Topic: {:?} is deleted", &name);
+                drop(v);
+                self.topics.remove(&name);
+            }
+        }
+
+        debug!("Subscription {} is removed!", id);
+        self.subscriptions.remove(&id).map(|(id, _)| id)
+    }
 }
 
 

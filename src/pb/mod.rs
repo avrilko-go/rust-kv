@@ -225,3 +225,13 @@ impl From<f64> for Value {
         }
     }
 }
+
+// impl From<Value> for CommandResponse {
+//     fn from(v: Value) -> Self {
+//         Self {
+//             status: StatusCode::OK.as_u16() as _,
+//             values: vec![v],
+//             ..Default::default()
+//         }
+//     }
+// }
