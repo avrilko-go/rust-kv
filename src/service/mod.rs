@@ -1,5 +1,6 @@
 pub mod command_service;
 pub mod topic;
+pub mod topic_service;
 
 use crate::command_request::RequestData;
 use crate::{CommandRequest, CommandResponse, KvError, Storage};
@@ -48,8 +49,19 @@ pub fn dispatch(cmd: CommandRequest, store: &impl Storage) -> CommandResponse {
     }
 }
 
+pub fn dispatch_stream(cmd: CommandRequest, topic: impl Topic) -> StreamingResponse {
+    match cmd.request_data {
+        Some(RequestData::Unsubscribe(param)) => param.execute(topic),
+        Some(RequestData::Publish(param)) => param.execute(topic),
+        Some(RequestData::Subscribe(param)) => param.execute(topic),
+        _ => unreachable!()
+    }
+}
+
 #[cfg(test)]
 use crate::{Kvpair, Value};
+use crate::topic::Topic;
+use crate::topic_service::{StreamingResponse, TopicService};
 
 // 测试成功返回的结果
 #[cfg(test)]

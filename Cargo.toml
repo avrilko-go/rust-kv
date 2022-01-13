@@ -28,6 +28,8 @@ yamux = "0.9"
 dashmap = "4"
 http = "0.2.5"
 tracing = "0.1"
+futures = "0.3"
+tokio-stream = { version = "0.1", features = ["sync"] }
 
 [dev-dependencies]
 tempfile = "3"
