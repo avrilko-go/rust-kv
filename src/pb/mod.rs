@@ -1,109 +1,111 @@
 use crate::{CommandRequest, CommandResponse, Hdel, Hexist, Hget, Hgetall, Hmdel, Hmexist, Hmget, Hmset, Hset, KvError, Kvpair, Publish, Subscribe, Unsubscribe, Value};
+
 pub mod abi;
-use crate::value::Value::{Bool, Integer};
+
+use crate::value::Value::{Bool, Float, Integer};
 use http::StatusCode;
 use prost::Message;
 use crate::command_request::RequestData;
 
 impl CommandRequest {
-    pub fn new_hget(table:impl Into<String>, key:impl Into<String>) -> Self {
+    pub fn new_hget(table: impl Into<String>, key: impl Into<String>) -> Self {
         Self {
-            request_data: Some(RequestData::Hget(Hget { table:table.into(), key:key.into() }))
+            request_data: Some(RequestData::Hget(Hget { table: table.into(), key: key.into() }))
         }
     }
 
-    pub fn new_hgetall(table:impl Into<String>) -> Self {
+    pub fn new_hgetall(table: impl Into<String>) -> Self {
         Self {
-            request_data:Some(RequestData::Hgetall(Hgetall {
+            request_data: Some(RequestData::Hgetall(Hgetall {
                 table: table.into()
             }))
         }
     }
 
-    pub fn new_hmget(table:impl Into<String>, keys:Vec<String> ) -> Self {
+    pub fn new_hmget(table: impl Into<String>, keys: Vec<String>) -> Self {
         Self {
             request_data: Some(RequestData::Hmget(Hmget { table: table.into(), keys }))
         }
     }
 
-    pub fn new_hset(table:impl Into<String>, key:impl Into<String>, value:Value) -> Self {
+    pub fn new_hset(table: impl Into<String>, key: impl Into<String>, value: Value) -> Self {
         Self {
-            request_data:Some(RequestData::Hset(Hset { table:table.into(), pair: Some(Kvpair::new(key,value)) }))
+            request_data: Some(RequestData::Hset(Hset { table: table.into(), pair: Some(Kvpair::new(key, value)) }))
         }
     }
 
-    pub fn new_hmset(table:impl Into<String>, pairs:Vec<Kvpair>) -> Self {
+    pub fn new_hmset(table: impl Into<String>, pairs: Vec<Kvpair>) -> Self {
         Self {
-            request_data:Some(RequestData::Hmset(Hmset {
-                table:table.into(),
-                pairs
-            }))
-        }
-    }
-
-    pub fn new_hdel(table:impl Into<String>, key:impl Into<String>) -> Self {
-        Self {
-            request_data:Some(RequestData::Hdel(Hdel {
+            request_data: Some(RequestData::Hmset(Hmset {
                 table: table.into(),
-                key: key.into()
+                pairs,
             }))
         }
     }
 
-    pub fn new_hmdel(table:impl Into<String>,keys:Vec<String>) -> Self {
+    pub fn new_hdel(table: impl Into<String>, key: impl Into<String>) -> Self {
         Self {
-            request_data:Some(RequestData::Hmdel(Hmdel {
+            request_data: Some(RequestData::Hdel(Hdel {
                 table: table.into(),
-                keys
+                key: key.into(),
             }))
         }
     }
 
-    pub fn new_hexist(table:impl Into<String>, key:impl Into<String>) -> Self {
+    pub fn new_hmdel(table: impl Into<String>, keys: Vec<String>) -> Self {
         Self {
-            request_data:Some(RequestData::Hexist(Hexist {
+            request_data: Some(RequestData::Hmdel(Hmdel {
                 table: table.into(),
-                key: key.into()
+                keys,
             }))
         }
     }
 
-    pub fn new_hmexist(table:impl Into<String>, keys:Vec<String>) -> Self {
+    pub fn new_hexist(table: impl Into<String>, key: impl Into<String>) -> Self {
         Self {
-            request_data:Some(RequestData::Hmexist(Hmexist {
+            request_data: Some(RequestData::Hexist(Hexist {
                 table: table.into(),
-                keys
+                key: key.into(),
             }))
         }
     }
 
-    pub fn new_subscribe(name:impl Into<String>) -> Self {
+    pub fn new_hmexist(table: impl Into<String>, keys: Vec<String>) -> Self {
         Self {
-            request_data:Some(RequestData::Subscribe(Subscribe{
+            request_data: Some(RequestData::Hmexist(Hmexist {
+                table: table.into(),
+                keys,
+            }))
+        }
+    }
+
+    pub fn new_subscribe(name: impl Into<String>) -> Self {
+        Self {
+            request_data: Some(RequestData::Subscribe(Subscribe {
                 topic: name.into()
             }))
         }
     }
 
-    pub fn new_unsubscribe(name:impl Into<String>, id:u32) -> Self {
+    pub fn new_unsubscribe(name: impl Into<String>, id: u32) -> Self {
         Self {
-            request_data:Some(RequestData::Unsubscribe(Unsubscribe {
+            request_data: Some(RequestData::Unsubscribe(Unsubscribe {
                 topic: name.into(),
-                id
+                id,
             }))
         }
     }
 
-    pub fn new_publish(name:impl Into<String>, data:Vec<Value>) -> Self {
+    pub fn new_publish(name: impl Into<String>, data: Vec<Value>) -> Self {
         Self {
-            request_data:Some(RequestData::Publish(Publish {
-                topic:name.into(),
-                data
+            request_data: Some(RequestData::Publish(Publish {
+                topic: name.into(),
+                data,
             }))
         }
     }
 
-    pub fn format(&self) ->String {
+    pub fn format(&self) -> String {
         format!("{:?}", self)
     }
 }
@@ -211,7 +213,15 @@ impl From<bool> for Value {
 impl From<i64> for Value {
     fn from(v: i64) -> Self {
         Self {
-            value:Some(Integer(v))
+            value: Some(Integer(v))
+        }
+    }
+}
+
+impl From<f64> for Value {
+    fn from(v: f64) -> Self {
+        Self {
+            value: Some(Float(v))
         }
     }
 }

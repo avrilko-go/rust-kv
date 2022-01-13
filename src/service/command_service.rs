@@ -110,7 +110,7 @@ impl CommandService for Hmexist {
 
 #[cfg(test)]
 mod tests {
-    use crate::{assert_res_error, assert_res_ok, CommandRequest, dispatch};
+    use crate::{assert_res_error, assert_res_ok, CommandRequest, dispatch, Kvpair, Storage, Value};
     use crate::memory::MemTable;
 
     #[test]
@@ -128,6 +128,114 @@ mod tests {
         let store = MemTable::new();
         let cmd = CommandRequest::new_hget("score", "u1");
         let res = dispatch(cmd, &store);
-        assert_res_error(&res,404, "Not found");
+        assert_res_error(&res, 404, "Not found");
+    }
+
+    #[test]
+    fn hmget_should_work() {
+        let store = MemTable::new();
+        set_key_pairs("user", vec![("u1", "Tyr"), ("u2", "Lindsey"), ("u3", "Rosie")], &store);
+        let cmd = CommandRequest::new_hmget("user", vec!["u1".into(), "u4".into(), "u3".into()]);
+        let res = dispatch(cmd, &store);
+        let values = &["Tyr".into(), Value::default(), "Rosie".into()];
+        assert_res_ok(&res, values, &[]);
+    }
+
+    #[test]
+    fn hgetall_should_work() {
+        let store = MemTable::new();
+        set_key_pairs(
+            "score",
+            vec![("u1", 10), ("u2", 8), ("u3", 11), ("u1", 6)],
+            &store,
+        );
+
+        let cmd = CommandRequest::new_hgetall("score");
+        let res = dispatch(cmd, &store);
+        let pairs = &[
+            Kvpair::new("u1", 6.into()),
+            Kvpair::new("u2", 8.into()),
+            Kvpair::new("u3", 11.into()),
+        ];
+        assert_res_ok(&res, &[], pairs);
+    }
+
+    #[test]
+    fn hset_should_work() {
+        let store = MemTable::new();
+        let cmd = CommandRequest::new_hset("t1", "hello", "world".into());
+        let res = dispatch(cmd.clone(), &store);
+        assert_res_ok(&res, &[Value::default()], &[]);
+        let res = dispatch(cmd, &store);
+        assert_res_ok(&res, &["world".into()], &[]);
+    }
+
+    #[test]
+    fn hmset_should_work() {
+        let store = MemTable::new();
+        set_key_pairs("t1", vec![("u1", "world")], &store);
+        let pairs = vec![
+            Kvpair::new("u1", 10.1.into()),
+            Kvpair::new("u2", 8.1.into()),
+        ];
+
+        let cmd = CommandRequest::new_hmset("t1", pairs);
+        let res = dispatch(cmd, &store);
+        assert_res_ok(&res, &["world".into(), Value::default()], &[]);
+    }
+
+    #[test]
+    fn hdel_should_work() {
+        let store = MemTable::new();
+        set_key_pairs("t1", vec![("u1", "v1")], &store);
+        let cmd = CommandRequest::new_hdel("t1", "u2");
+        let res = dispatch(cmd, &store);
+        assert_res_ok(&res, &[Value::default()], &[]);
+
+        let cmd = CommandRequest::new_hdel("t1", "u1");
+        let res = dispatch(cmd, &store);
+        assert_res_ok(&res, &["v1".into()], &[]);
+    }
+
+    #[test]
+    fn hmdel_should_work() {
+        let store = MemTable::new();
+        set_key_pairs("t1", vec![("u1", "v1"), ("u2", "v2")], &store);
+
+        let cmd = CommandRequest::new_hmdel("t1", vec!["u1".into(), "u3".into()]);
+        let res = dispatch(cmd, &store);
+        assert_res_ok(&res, &["v1".into(), Value::default()], &[]);
+    }
+
+    #[test]
+    fn hexist_should_work() {
+        let store = MemTable::new();
+        set_key_pairs("t1", vec![("u1", "v1")], &store);
+        let cmd = CommandRequest::new_hexist("t1", "u2");
+        let res = dispatch(cmd, &store);
+        assert_res_ok(&res, &[false.into()], &[]);
+
+        let cmd = CommandRequest::new_hexist("t1", "u1");
+        let res = dispatch(cmd, &store);
+        assert_res_ok(&res, &[true.into()], &[]);
+    }
+
+    #[test]
+    fn hmexist_should_work() {
+        let store = MemTable::new();
+        set_key_pairs("t1", vec![("u1", "v1"), ("u2", "v2")], &store);
+
+        let cmd = CommandRequest::new_hmexist("t1", vec!["u1".into(), "u3".into()]);
+        let res = dispatch(cmd, &store);
+        assert_res_ok(&res, &[true.into(), false.into()], &[]);
+    }
+
+    fn set_key_pairs<T: Into<Value>>(table: &str, pairs: Vec<(&str, T)>, store: &impl Storage) {
+        pairs
+            .into_iter()
+            .map(|(k, v)| CommandRequest::new_hset(table, k, v.into()))
+            .for_each(|cmd| {
+                dispatch(cmd, store);
+            });
     }
 }
