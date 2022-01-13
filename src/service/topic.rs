@@ -99,6 +99,50 @@ impl Broadcaster {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use crate::assert_res_ok;
+    use super::*;
+
+    #[tokio::test]
+    async fn pub_sub_should_work() {
+        let b = Arc::new(Broadcaster::default());
+        let lobby = "lobby".to_string();
+
+        let mut stream1 = b.clone().subscribe(lobby.clone());
+        let mut stream2 = b.clone().subscribe(lobby.clone());
+
+        let v: Value = "hello".into();
+        b.clone().publish(lobby.clone(), Arc::new(v.clone().into()));
+
+        let id1 = get_id(&mut stream1).await;
+        let id2 = get_id(&mut stream2).await;
+        assert_ne!(id1, id2);
+
+        let res1 = stream1.recv().await.unwrap();
+        let res2 = stream2.recv().await.unwrap();
+        assert_eq!(res1, res2);
+
+        assert_res_ok(&res1, &[v.clone()], &[]);
+
+        let result = b.clone().unsubscribe(lobby.clone(), id1 as _).unwrap();
+        assert_eq!(result, id1 as _);
+
+        let v: Value = "world".into();
+        b.clone().publish(lobby.clone(), Arc::new(v.clone().into()));
+
+        assert!(stream1.recv().await.is_none());
+
+        let res2 = stream2.recv().await.unwrap();
+        assert_res_ok(&res2, &[v.clone()], &[]);
+    }
+
+    pub async fn get_id(res: &mut Receiver<Arc<CommandResponse>>) -> u32 {
+        let id: i64 = res.recv().await.unwrap().as_ref().try_into().unwrap();
+        id as _
+    }
+}
+
 
 
 

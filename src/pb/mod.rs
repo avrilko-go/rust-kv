@@ -1,4 +1,4 @@
-use crate::{CommandRequest, CommandResponse, Hdel, Hexist, Hget, Hgetall, Hmdel, Hmexist, Hmget, Hmset, Hset, KvError, Kvpair, Publish, Subscribe, Unsubscribe, Value};
+use crate::{CommandRequest, CommandResponse, Hdel, Hexist, Hget, Hgetall, Hmdel, Hmexist, Hmget, Hmset, Hset, KvError, Kvpair, Publish, Subscribe, Unsubscribe, Value, value};
 
 pub mod abi;
 
@@ -6,6 +6,35 @@ use crate::value::Value::{Bool, Float, Integer};
 use http::StatusCode;
 use prost::Message;
 use crate::command_request::RequestData;
+
+impl CommandResponse {
+    pub fn ok() -> Self {
+        Self {
+            status: StatusCode::OK.as_u16() as _,
+            ..Default::default()
+        }
+    }
+
+    pub fn internal_error(msg: String) -> Self {
+        Self {
+            status: StatusCode::INTERNAL_SERVER_ERROR.as_u16() as _,
+            message: msg,
+            ..Default::default()
+        }
+    }
+
+    pub fn format(&self) -> String {
+        format!("{:?}", self)
+    }
+}
+
+impl Value {
+    /// 转换成 string 做错误处理
+    pub fn format(&self) -> String {
+        format!("{:?}", self)
+    }
+}
+
 
 impl CommandRequest {
     pub fn new_hget(table: impl Into<String>, key: impl Into<String>) -> Self {
@@ -226,12 +255,51 @@ impl From<f64> for Value {
     }
 }
 
-// impl From<Value> for CommandResponse {
-//     fn from(v: Value) -> Self {
-//         Self {
-//             status: StatusCode::OK.as_u16() as _,
-//             values: vec![v],
-//             ..Default::default()
-//         }
-//     }
-// }
+impl TryFrom<&CommandResponse> for i64 {
+    type Error = KvError;
+
+    fn try_from(value: &CommandResponse) -> Result<Self, Self::Error> {
+        if value.status != StatusCode::OK.as_u16() as u32 {
+            return Err(KvError::ConvertError(value.format(), "CommandResponse"));
+        }
+
+        match value.values.get(0) {
+            Some(v) => v.try_into(),
+            None => Err(KvError::ConvertError(value.format(), "CommandResponse")),
+        }
+    }
+}
+
+impl TryFrom<Value> for f64 {
+    type Error = KvError;
+
+    fn try_from(v: Value) -> Result<Self, Self::Error> {
+        match v.value {
+            Some(value::Value::Float(f)) => Ok(f),
+            _ => Err(KvError::ConvertError(v.format(), "Float")),
+        }
+    }
+}
+
+
+impl TryFrom<&Value> for i64 {
+    type Error = KvError;
+
+    fn try_from(v: &Value) -> Result<Self, Self::Error> {
+        match v.value {
+            Some(value::Value::Integer(i)) => Ok(i),
+            _ => Err(KvError::ConvertError(v.format(), "Integer")),
+        }
+    }
+}
+
+impl TryFrom<Value> for i64 {
+    type Error = KvError;
+
+    fn try_from(v: Value) -> Result<Self, Self::Error> {
+        match v.value {
+            Some(value::Value::Integer(i)) => Ok(i),
+            _ => Err(KvError::ConvertError(v.format(), "Integer")),
+        }
+    }
+}
