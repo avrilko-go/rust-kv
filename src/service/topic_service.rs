@@ -1,11 +1,11 @@
-use futures::{Stream, stream};
+use crate::topic::Topic;
+use crate::{CommandResponse, Publish, Subscribe, Unsubscribe};
+use futures::{stream, Stream};
 use std::pin::Pin;
 use std::sync::Arc;
 use tokio_stream::wrappers::ReceiverStream;
-use crate::{CommandResponse, Publish, Subscribe, Unsubscribe};
-use crate::topic::Topic;
 
-pub type StreamingResponse = Pin<Box<dyn Stream<Item=Arc<CommandResponse>> + Send>>;
+pub type StreamingResponse = Pin<Box<dyn Stream<Item = Arc<CommandResponse>> + Send>>;
 
 pub trait TopicService {
     fn execute(self, topic: impl Topic) -> StreamingResponse;
@@ -22,7 +22,7 @@ impl TopicService for Unsubscribe {
     fn execute(self, topic: impl Topic) -> StreamingResponse {
         let res = match topic.unsubscribe(self.topic, self.id) {
             Ok(_) => CommandResponse::ok(),
-            Err(e) => e.into()
+            Err(e) => e.into(),
         };
 
         Box::pin(stream::once(async { Arc::new(res) }))
@@ -38,12 +38,11 @@ impl TopicService for Publish {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+    use crate::topic::Broadcaster;
+    use crate::{assert_res_error, assert_res_ok, dispatch_stream, CommandRequest};
     use std::time::Duration;
     use tokio_stream::StreamExt;
-    use crate::{assert_res_error, assert_res_ok, CommandRequest, dispatch_stream};
-    use crate::topic::Broadcaster;
-    use super::*;
-
 
     #[tokio::test]
     async fn dispatch_publish_should_work() {

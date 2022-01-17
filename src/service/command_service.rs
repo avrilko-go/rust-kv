@@ -110,8 +110,10 @@ impl CommandService for Hmexist {
 
 #[cfg(test)]
 mod tests {
-    use crate::{assert_res_error, assert_res_ok, CommandRequest, dispatch, Kvpair, Storage, Value};
     use crate::memory::MemTable;
+    use crate::{
+        assert_res_error, assert_res_ok, dispatch, CommandRequest, Kvpair, Storage, Value,
+    };
 
     #[test]
     fn hget_should_work() {
@@ -134,7 +136,11 @@ mod tests {
     #[test]
     fn hmget_should_work() {
         let store = MemTable::new();
-        set_key_pairs("user", vec![("u1", "Tyr"), ("u2", "Lindsey"), ("u3", "Rosie")], &store);
+        set_key_pairs(
+            "user",
+            vec![("u1", "Tyr"), ("u2", "Lindsey"), ("u3", "Rosie")],
+            &store,
+        );
         let cmd = CommandRequest::new_hmget("user", vec!["u1".into(), "u4".into(), "u3".into()]);
         let res = dispatch(cmd, &store);
         let values = &["Tyr".into(), Value::default(), "Rosie".into()];

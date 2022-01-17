@@ -1,9 +1,9 @@
-use std::sync::Arc;
-use std::sync::atomic::{AtomicU32, Ordering};
-use dashmap::{DashMap, DashSet};
-use tokio::sync::mpsc::{Receiver, channel, Sender};
 use crate::{CommandResponse, KvError, Value};
-use tracing::{instrument, warn, debug, info};
+use dashmap::{DashMap, DashSet};
+use std::sync::atomic::{AtomicU32, Ordering};
+use std::sync::Arc;
+use tokio::sync::mpsc::{channel, Receiver, Sender};
+use tracing::{debug, info, instrument, warn};
 
 const BROADCAST_CAPACITY: usize = 128;
 
@@ -101,8 +101,8 @@ impl Broadcaster {
 
 #[cfg(test)]
 mod tests {
-    use crate::assert_res_ok;
     use super::*;
+    use crate::assert_res_ok;
 
     #[tokio::test]
     async fn pub_sub_should_work() {
@@ -142,8 +142,3 @@ mod tests {
         id as _
     }
 }
-
-
-
-
-
