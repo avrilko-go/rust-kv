@@ -45,11 +45,11 @@ pub trait FrameCoder: Message + Sized + Default {
         }
     }
 
-    fn decode_frame(buf: &mut BytesMut) -> Result<Self, KvError> {
-        let header = buf.get_u32() as usize;
-    }
+    // fn decode_frame(buf: &mut BytesMut) -> Result<Self, KvError> {
+    //     let header = buf.get_u32() as usize;
+    // }
 }
 
-fn decode_header(header: usize) -> (usize, bool) {
-
-}
+// fn decode_header(header: usize) -> (usize, bool) {
+//
+// }

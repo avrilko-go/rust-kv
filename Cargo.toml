@@ -13,6 +13,11 @@ path = "tools/gen_certs.rs"
 name = "gen_config"
 path = "tools/gen_config.rs"
 
+[[bin]]
+name = "kv_server"
+path = "src/server.rs"
+
+
 
 [dependencies]
 tokio = { version = "1", features = ["full"] }
@@ -32,6 +37,10 @@ futures = "0.3"
 tokio-stream = { version = "0.1", features = ["sync"] }
 bytes = "1.1.0"
 flate2 = "1.0.22"
+tracing-appender = "0.1" # 文件日志
+tracing-opentelemetry = "0.15" # opentelemetry 支持
+tracing-subscriber = { version = "0.2", features = ["json", "chrono"] } # 日志处理
+opentelemetry-jaeger = "0.15"
 
 [dev-dependencies]
 tempfile = "3"
